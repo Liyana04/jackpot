@@ -706,16 +706,20 @@ async function fetchCountries() {
     if (!countrySelect) return;
 
     try {
-        const response = await fetch('https://restcountries.com/v3.1/all?fields=name,flag');
+        // Updated API request including cca2 (2-letter country code)
+        const response = await fetch('https://restcountries.com/v3.1/all?fields=name,flag,cca2');
+        if (!response.ok) throw new Error('API request failed');
+        
         const countries = await response.json();
 
+        // Sort alphabetically
         countries.sort((a, b) => a.name.common.localeCompare(b.name.common));
 
-        countrySelect.innerHTML = '';
+        countrySelect.innerHTML = '<option value="">Select Country...</option>';
 
         countries.forEach(country => {
             const option = document.createElement('option');
-            const flag = country.flag || '';
+            const flag = country.flag || country.cca2 || '';
             const name = country.name.common;
             option.value = `${flag} ${name}`;
             option.textContent = `${flag} ${name}`;
@@ -723,7 +727,14 @@ async function fetchCountries() {
         });
     } catch (error) {
         console.error('Failed to load countries:', error);
-        countrySelect.innerHTML = '<option value="Malaysia">Malaysia</option>';
+        // Fallback list so the menu never gets stuck on "Loading countries..."
+        countrySelect.innerHTML = `
+            <option value="🇲🇾 Malaysia">🇲🇾 Malaysia</option>
+            <option value="🇸🇬 Singapore">🇸🇬 Singapore</option>
+            <option value="🇯🇵 Japan">🇯🇵 Japan</option>
+            <option value="🇺🇸 United States">🇺🇸 United States</option>
+            <option value="🇬🇧 United Kingdom">🇬🇧 United Kingdom</option>
+        `;
     }
 }
 
