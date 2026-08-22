@@ -700,6 +700,34 @@ if (instructionModalEl) {
     });
 }
 
+// --- FETCH COUNTRIES FROM API ---
+async function fetchCountries() {
+    const countrySelect = document.getElementById('player-country');
+    if (!countrySelect) return;
+
+    try {
+        const response = await fetch('https://restcountries.com/v3.1/all?fields=name,flag');
+        const countries = await response.json();
+
+        countries.sort((a, b) => a.name.common.localeCompare(b.name.common));
+
+        countrySelect.innerHTML = '';
+
+        countries.forEach(country => {
+            const option = document.createElement('option');
+            const flag = country.flag || '';
+            const name = country.name.common;
+            option.value = `${flag} ${name}`;
+            option.textContent = `${flag} ${name}`;
+            countrySelect.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Failed to load countries:', error);
+        countrySelect.innerHTML = '<option value="Malaysia">Malaysia</option>';
+    }
+}
+
 // Start loop
+fetchCountries();
 renderLeaderboard();
 gameLoop();
