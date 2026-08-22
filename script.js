@@ -706,20 +706,21 @@ async function fetchCountries() {
     if (!countrySelect) return;
 
     try {
-        // Updated API request including cca2 (2-letter country code)
         const response = await fetch('https://restcountries.com/v3.1/all?fields=name,flag,cca2');
         if (!response.ok) throw new Error('API request failed');
         
         const countries = await response.json();
 
-        // Sort alphabetically
+        // Sort countries alphabetically by common name
         countries.sort((a, b) => a.name.common.localeCompare(b.name.common));
 
+        // Clear "Loading countries..." and set initial placeholder
         countrySelect.innerHTML = '<option value="">Select Country...</option>';
 
+        // Populate strictly from API data
         countries.forEach(country => {
             const option = document.createElement('option');
-            const flag = country.flag || country.cca2 || '';
+            const flag = country.flag || '';
             const name = country.name.common;
             option.value = `${flag} ${name}`;
             option.textContent = `${flag} ${name}`;
@@ -727,18 +728,13 @@ async function fetchCountries() {
         });
     } catch (error) {
         console.error('Failed to load countries:', error);
-        // Fallback list so the menu never gets stuck on "Loading countries..."
-        countrySelect.innerHTML = `
-            <option value="🇲🇾 Malaysia">🇲🇾 Malaysia</option>
-            <option value="🇸🇬 Singapore">🇸🇬 Singapore</option>
-            <option value="🇯🇵 Japan">🇯🇵 Japan</option>
-            <option value="🇺🇸 United States">🇺🇸 United States</option>
-            <option value="🇬🇧 United Kingdom">🇬🇧 United Kingdom</option>
-        `;
+        countrySelect.innerHTML = '<option value="">Failed to load countries</option>';
     }
 }
 
 // Start loop
-fetchCountries();
-renderLeaderboard();
-gameLoop();
+document.addEventListener('DOMContentLoaded', () => {
+    fetchCountries();
+    renderLeaderboard();
+    gameLoop();
+});
