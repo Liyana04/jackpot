@@ -15,7 +15,7 @@ function showInstructionModal() {
     
     if (modal) {
         if (modalCat) {
-            modalCat.src = 'images/oyen.png';
+            modalCat.src = 'images/ready.png';
         }
         modal.classList.remove('hidden');
     }
@@ -218,8 +218,8 @@ const ctx = canvas.getContext('2d');
 let W = 800;
 let H = 400;
 let GROUND_Y = 330;
-const PLAYER_WIDTH = 32;
-const PLAYER_HEIGHT = 32;
+const PLAYER_WIDTH = 64;
+const PLAYER_HEIGHT = 64;
 
 // --- DOM ELEMENTS ---
 const menuScreen = document.getElementById('menu-screen');
@@ -244,7 +244,7 @@ let deathTimer = 0;
 
 // --- ASSETS ---
 const catOrangeImg = new Image();
-catOrangeImg.src = 'images/oyen.png';
+catOrangeImg.src = 'images/ready.webp';
 let catImg = catOrangeImg;
 
 const foodImages = [];
@@ -602,6 +602,7 @@ function startGame() {
     isCheering = false;
     isPaused = false;
     scoreDisplay.textContent = '0';
+    renderLeaderboard();
     gameState = 'playing';
     player.x = 60;
     player.y = GROUND_Y - player.h;
@@ -735,30 +736,60 @@ async function fetchCountries() {
     const countrySelect = document.getElementById('player-country');
     if (!countrySelect) return;
 
-    try {
-        const response = await fetch('https://restcountries.com/v3.1/all?fields=name,flag,cca2');
-        if (!response.ok) throw new Error('API request failed');
-        
-        const countries = await response.json();
+    const parseAndRender = (data) => {
+        // Filter out specific entries if needed
+        const filtered = data.filter(c => c.cca3 !== 'ISR');
+        filtered.sort((a, b) => a.name.common.localeCompare(b.name.common));
 
-        // Sort countries alphabetically by common name
-        countries.sort((a, b) => a.name.common.localeCompare(b.name.common));
-
-        // Clear "Loading countries..." and set initial placeholder
         countrySelect.innerHTML = '<option value="">Select Country...</option>';
-
-        // Populate strictly from API data
-        countries.forEach(country => {
+        filtered.forEach(country => {
             const option = document.createElement('option');
-            const flag = country.flag || '';
+            const flag = country.flag || country.cca2 || '';
             const name = country.name.common;
             option.value = `${flag} ${name}`;
             option.textContent = `${flag} ${name}`;
             countrySelect.appendChild(option);
         });
-    } catch (error) {
-        console.error('Failed to load countries:', error);
-        countrySelect.innerHTML = '<option value="">Failed to load countries</option>';
+    };
+
+    try {
+        // Try Primary API
+        const response = await fetch('https://restcountries.com/v3.1/all?fields=name,flag,cca2,cca3');
+        if (!response.ok) throw new Error('Primary API failed');
+        const data = await response.json();
+        parseAndRender(data);
+    } catch (err) {
+        console.warn('Primary API blocked or failed, trying CDN fallback...');
+        try {
+            // Try Secondary Backup CDN
+            const backupRes = await fetch('https://raw.githubusercontent.com/mledoze/countries/master/dist/countries.json');
+            if (!backupRes.ok) throw new Error('CDN fallback failed');
+            const backupData = await backupRes.json();
+            
+            // Format backup schema to match restcountries schema
+            const formatted = backupData.map(c => ({
+                name: { common: c.name.common },
+                flag: c.flag,
+                cca2: c.cca2,
+                cca3: c.cca3
+            }));
+            parseAndRender(formatted);
+        } catch (backupErr) {
+            console.error('All remote sources failed. Populating default list.', backupErr);
+            // Local offline safety net
+            countrySelect.innerHTML = `
+                <option value="">Select Country...</option>
+                <option value="🇦🇺 Australia">🇦🇺 Australia</option>
+                <option value="🇧🇳 Brunei">🇧🇳 Brunei</option>
+                <option value="🇮🇩 Indonesia">🇮🇩 Indonesia</option>
+                <option value="🇯🇵 Japan">🇯🇵 Japan</option>
+                <option value="🇲🇾 Malaysia">🇲🇾 Malaysia</option>
+                <option value="🇸🇬 Singapore">🇸🇬 Singapore</option>
+                <option value="🇹🇭 Thailand">🇹🇭 Thailand</option>
+                <option value="🇬🇧 United Kingdom">🇬🇧 United Kingdom</option>
+                <option value="🇺🇸 United States">🇺🇸 United States</option>
+                <option value="🇻🇳 Vietnam">🇻🇳 Vietnam</option>            `;
+        }
     }
 }
 
