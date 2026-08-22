@@ -57,9 +57,17 @@ function renderLeaderboard() {
     const list = document.getElementById('leaderboard-list');
     if (list) {
         const highestScore = leaderboard[0];
-        list.textContent = highestScore
-            ? `${highestScore.country} ${highestScore.name} ${highestScore.score}`
-            : '';
+        if (highestScore) {
+            list.innerHTML = `
+                <div class="flex items-center justify-between w-full">
+                    <span>🏆</span>
+                    <span class="truncate px-2">${highestScore.country} ${highestScore.name} ${highestScore.score}</span>
+                    <span>🏆</span>
+                </div>
+            `;
+        } else {
+            list.innerHTML = '';
+        }
     }
 }
 
