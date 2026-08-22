@@ -17,21 +17,32 @@
         <canvas id="gameCanvas" width="800" height="400" class="w-full h-full block bg-purple-300"></canvas>
 
         <!-- MENU SCREEN (Journey step 2) -->
-        <div id="menu-screen" class="absolute inset-0 flex flex-col items-center justify-center bg-[#1a0f2e]/80 backdrop-blur-sm z-20 font-pixel text-white">
-                    <div class="bg-[#2e1c4a] p-4 sm:p-6 rounded-xl border-4 border-gray-400 flex flex-col items-center gap-3 sm:gap-4 w-[calc(100%-8px)] max-w-5xl max-h-[96%] overflow-y-auto text-center shadow-[inset_0_0_20px_rgba(255,255,255,0.1)]">
-                    <div class="bg-white text-[#2e1c4a] font-bold px-4 py-1 rounded w-full">Jackpot Adventure</div>
-                <p class="text-xs text-gray-300 mt-1">Create your runner profile for the leaderboard</p>
-                <input id="player-name" type="text" maxlength="14" required class="bg-transparent border-b-2 border-white text-center text-lg outline-none w-full placeholder-gray-400 text-white transition-colors focus:border-yellow-300" placeholder="Your name">
-                <select id="player-country" class="bg-[#2e1c4a] border-2 border-white text-white text-sm p-2 w-full">
-                    <option value="">Loading countries...</option>
-                </select>
-                <div id="leaderboard-panel" class="bg-white/90 text-[#2e1c4a] border-2 border-gray-400 rounded p-2 font-pixel text-[0.45rem] w-full text-left">
-                    <div class="font-bold mb-1">TOP RUNNERS</div><div id="leaderboard-list"></div>
+        <div id="menu-screen" class="absolute inset-0 flex flex-col items-center justify-center bg-[#1a0f2e]/80 backdrop-blur-sm z-20 font-pixel text-white p-4">
+            <div class="bg-[#2e1c4a] p-4 sm:p-8 rounded-xl border-4 border-gray-400 flex flex-col items-center gap-3 sm:gap-4 w-full max-h-[96%] overflow-y-auto text-center shadow-[inset_0_0_20px_rgba(255,255,255,0.1)]">
+                
+                <div class="bg-white text-[#2e1c4a] font-bold px-4 py-2 rounded w-full text-base sm:text-lg">
+                    Jackpot Adventure
                 </div>
                 
-                <img src="images/ready.webp" alt="Ready to play" class="w-24 h-24 object-contain">
+                <p class="text-xs sm:text-sm text-gray-300">Create your runner profile for the leaderboard</p>
                 
-                <button onclick="startGame()" class="mt-3 bg-white text-[#2e1c4a] px-8 py-2 font-bold hover:bg-gray-200 transition active:scale-95 shadow-md">START ADVENTURE</button>
+                <input id="player-name" type="text" maxlength="14" required class="bg-transparent border-b-2 border-white text-center text-base sm:text-lg outline-none w-full placeholder-gray-400 text-white transition-colors focus:border-yellow-300" placeholder="Your name">
+                
+                <select id="player-country" class="bg-[#2e1c4a] border-2 border-white text-white text-xs sm:text-sm p-2.5 w-full rounded">
+                    <option value="">Loading countries...</option>
+                </select>
+                
+                <div id="leaderboard-panel" class="bg-white/90 text-[#2e1c4a] border-2 border-gray-400 rounded p-3 font-pixel text-[0.55rem] sm:text-xs w-full text-left">
+                    <div class="font-bold mb-1 border-b border-gray-400 pb-1">TOP RUNNERS</div>
+                    <div id="leaderboard-list"></div>
+                </div>
+                
+                <img src="images/ready.webp" alt="Ready to play" class="w-20 h-20 sm:w-24 sm:h-24 object-contain my-1">
+                
+                <button onclick="startGame()" class="bg-white text-[#2e1c4a] px-8 py-3 font-bold hover:bg-gray-200 transition active:scale-95 shadow-md text-xs sm:text-sm rounded w-full sm:w-auto">
+                    START ADVENTURE
+                </button>
+                
             </div>
         </div>
 

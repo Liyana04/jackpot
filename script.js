@@ -4,7 +4,7 @@ let isMuted = false;
 let instructionTimer = null;
 let isPaused = false;
 let leaderboard = JSON.parse(localStorage.getItem('jackpot-leaderboard') || 'null') || [
-    { name: 'Liyana', country: 'MY', score: 429 }
+    { name: 'Liyana', country: 'MY', score: 4 }
 ];
 
 

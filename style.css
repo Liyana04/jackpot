@@ -47,7 +47,14 @@ html, body {
     overflow-y: auto;
 }
 
-#menu-screen > div,
+#menu-screen > div {
+    width: min(92%, 42rem); /* 👈 Expanded max-width for desktop screens */
+    padding: clamp(1rem, 2.5vw, 1.8rem);
+    max-height: min(92%, 36rem);
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
 #win-screen > div {
     width: min(92%, 28rem);
     padding: clamp(0.9rem, 2.6vw, 1.3rem);
