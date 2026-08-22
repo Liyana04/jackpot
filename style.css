@@ -154,3 +154,31 @@ html, body {
     flex-shrink: 0;
     margin: 0;
 }
+
+/* Walking left and right animation */
+@keyframes walkPatrol {
+    0%, 100% {
+        transform: translateX(-40px);
+    }
+    50% {
+        transform: translateX(40px);
+    }
+}
+
+/* Direction flip with scaleX and smooth transition */
+@keyframes flipDirection {
+    0%, 48% {
+        transform: scaleX(1);
+    }
+    50%, 98% {
+        transform: scaleX(-1);
+    }
+}
+
+.animate-patrol {
+    animation: walkPatrol 4s ease-in-out infinite;
+}
+
+.animate-flip {
+    animation: flipDirection 4s step-end infinite;
+}

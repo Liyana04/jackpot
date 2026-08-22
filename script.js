@@ -56,9 +56,10 @@ function renderLeaderboard() {
     leaderboard.sort((a, b) => b.score - a.score);
     const list = document.getElementById('leaderboard-list');
     if (list) {
-        list.innerHTML = leaderboard.slice(0, 5).map((entry, index) =>
-            `<div class="flex justify-between gap-1 py-1 border-b border-gray-300"><span>${index + 1}. ${entry.country} ${entry.name}</span><b>${entry.score}</b></div>`
-        ).join('');
+        const highestScore = leaderboard[0];
+        list.textContent = highestScore
+            ? `${highestScore.country} ${highestScore.name} ${highestScore.score}`
+            : '';
     }
 }
 
