@@ -27,6 +27,8 @@ function closeInstructionModal() {
     if (modal && !modal.classList.contains('hidden')) {
         modal.classList.add('hidden');
         gameState = 'playing'; // Resume/Start gameplay motion
+
+        initAudio();
     }
 }
 
@@ -37,7 +39,19 @@ function initAudio() {
     if (audioCtx.state === 'suspended') {
         audioCtx.resume();
     }
+
+    const music = document.getElementById('background-music');
+    if (music && music.paused) {
+        music.volume = 0.3;
+        music.muted = isMuted;
+        music.play().catch(err => console.log('Autoplay prevented. Waiting for user interaction:', err));
+    }
 }
+
+// Global user interaction listeners to bypass autoplay restrictions on page load
+window.addEventListener('click', initAudio, { once: true });
+window.addEventListener('keydown', initAudio, { once: true });
+window.addEventListener('touchstart', initAudio, { once: true });
 
 // Toggle Mute Function
 function toggleMute() {
@@ -47,8 +61,8 @@ function toggleMute() {
         muteBtn.textContent = isMuted ? '🔇' : '🔊';
     }
     const music = document.getElementById('background-music');
-    if (music && music.contentWindow) {
-        music.contentWindow.postMessage(JSON.stringify({ event: 'command', func: isMuted ? 'mute' : 'unMute', args: [] }), '*');
+    if (music) {
+        music.muted = isMuted;
     }
 }
 
@@ -83,10 +97,16 @@ function togglePause() {
     isPaused = !isPaused;
     gameState = isPaused ? 'paused' : 'playing';
     const pauseButton = document.getElementById('pause-btn');
-    pauseButton.textContent = isPaused ? '▶' : 'Ⅱ';
+    if (pauseButton) {
+        pauseButton.textContent = isPaused ? '▶' : 'Ⅱ';
+    }
     const music = document.getElementById('background-music');
-    if (music && music.contentWindow) {
-        music.contentWindow.postMessage(JSON.stringify({ event: 'command', func: isPaused ? 'pauseVideo' : 'playVideo', args: [] }), '*');
+    if (music) {
+        if (isPaused) {
+            music.pause();
+        } else if (!isMuted) {
+            music.play().catch(err => console.log('Audio playback blocked:', err));
+        }
     }
 }
 
@@ -590,10 +610,11 @@ function startGame() {
     floatingTexts = [];
     document.getElementById('pause-btn').classList.remove('hidden');
     const music = document.getElementById('background-music');
-    if (music && music.contentWindow && !isMuted) {
-        music.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'setVolume', args: [30] }), '*');
-        music.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), '*');
-    }
+        if (music) {
+            music.volume = 0.3; // 30% volume
+            music.muted = isMuted;
+            music.play().catch(err => console.log('Audio playback blocked:', err));
+        }
 
     gameState = 'instructions'; 
     showInstructionModal();
@@ -745,5 +766,6 @@ async function fetchCountries() {
 document.addEventListener('DOMContentLoaded', () => {
     fetchCountries();
     renderLeaderboard();
+    initAudio();
     gameLoop();
 });

@@ -91,9 +91,7 @@
                 <span id="player-name-display" class="text-[#2B3856]"></span>
                 <span id="score-display" class="text-[#2B3856] font-bold">0</span>
             </div>
-            <div id="leaderboard-panel" class="bg-white/90 text-[#2e1c4a] border-2 border-gray-400 rounded p-2 font-pixel text-[0.55rem] sm:text-xs w-max max-w-[45vw] text-left">
-                <div id="leaderboard-list"></div>
-            </div>
+
             <div class="flex items-center gap-2">
              <button id="mute-btn" onclick="toggleMute()" class="pointer-events-auto bg-black/50 hover:bg-black/70 text-base p-1.5 rounded transition">🔊</button>
              <button id="pause-btn" onclick="togglePause()" class="pointer-events-auto bg-black/50 hover:bg-black/70 text-base p-1.5 rounded transition hidden">Ⅱ</button>
@@ -130,7 +128,7 @@
         </div>
         
     </div>
-    <iframe id="background-music" title="Jackpot Run background music" class="hidden" width="0" height="0" src="https://www.youtube.com/embed/C-ImO_e62-w?enablejsapi=1&autoplay=1&controls=0&loop=1&playlist=C-ImO_e62-w" allow="autoplay"></iframe>
+    <audio id="background-music" src="./audio/audio.mp3" loop preload="auto"></audio>
     <script src="script.js"></script>
 </body>
 </html>
