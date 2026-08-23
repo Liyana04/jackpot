@@ -6,6 +6,9 @@ let isPaused = false;
 let leaderboard = JSON.parse(localStorage.getItem('jackpot-leaderboard') || 'null') || [
     { name: 'Liyana', country: 'MY', score: 4 }
 ];
+const SUPABASE_URL = 'https://xvujayoqsumbxlkdgsqo.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_UPWp7LPNk3FqVYNlWR9T1Q_mre_Dq8A';
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
 
 // Show Instructions in Pause Mode
@@ -42,7 +45,7 @@ function initAudio() {
 
     const music = document.getElementById('background-music');
     if (music && music.paused) {
-        music.volume = 0.3;
+        music.volume = 0.1;
         music.muted = isMuted;
         music.play().catch(err => console.log('Autoplay prevented. Waiting for user interaction:', err));
     }
@@ -91,9 +94,33 @@ function renderLeaderboard() {
 
 function saveScore() {
     if (!playerName || score <= 0) return;
-    leaderboard.push({ name: playerName, country: playerCountry, score });
+    const scoreEntry = { name: playerName, country: playerCountry, score };
+    leaderboard.push(scoreEntry);
     localStorage.setItem('jackpot-leaderboard', JSON.stringify(leaderboard));
     renderLeaderboard();
+    saveScoreToSupabase(scoreEntry);
+}
+
+async function loadLeaderboardFromSupabase() {
+    const { data, error } = await supabaseClient
+        .from('leaderboard')
+        .select('name, country, score')
+        .order('score', { ascending: false })
+        .limit(50);
+
+    if (error) {
+        console.warn('Supabase leaderboard unavailable; using local scores.', error.message);
+        return;
+    }
+
+    leaderboard = data || [];
+    localStorage.setItem('jackpot-leaderboard', JSON.stringify(leaderboard));
+    renderLeaderboard();
+}
+
+async function saveScoreToSupabase(scoreEntry) {
+    const { error } = await supabaseClient.from('leaderboard').insert(scoreEntry);
+    if (error) console.warn('Could not save score to Supabase:', error.message);
 }
 
 function togglePause() {
@@ -879,5 +906,6 @@ async function fetchCountries() {
 document.addEventListener('DOMContentLoaded', () => {
     fetchCountries();
     renderLeaderboard();
+    loadLeaderboardFromSupabase();
     gameLoop();
 });
