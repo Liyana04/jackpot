@@ -28,9 +28,18 @@
                 
                 <input id="player-name" type="text" maxlength="14" required class="bg-transparent border-b-2 border-white text-center text-base sm:text-lg outline-none w-full placeholder-gray-400 text-white transition-colors focus:border-yellow-300" placeholder="Your name">
                 
-                <select id="player-country" class="bg-[#2e1c4a] border-2 border-white text-white text-xs sm:text-sm p-2.5 w-full rounded">
-                    <option value="">Loading countries...</option>
-                </select>
+                <div class="w-full relative">
+                    <select id="player-country" class="sr-only" aria-hidden="true" tabindex="-1">
+                        <option value="">Loading countries...</option>
+                    </select>
+                    <button id="country-dropdown-button" type="button" class="country-dropdown-button" aria-haspopup="listbox" aria-expanded="false">
+                        Loading countries...
+                    </button>
+                    <div id="country-dropdown-options" class="country-dropdown-options hidden">
+                        <input id="country-search" type="search" class="country-search" placeholder="Search country..." autocomplete="off">
+                        <div id="country-option-list" role="listbox"></div>
+                    </div>
+                </div>
                 
                 <div class="animate-patrol my-1">
                     <img src="images/ready.webp" alt="Ready to play" class="w-20 h-20 sm:w-24 sm:h-24 object-contain animate-flip transition-transform duration-300">
@@ -52,7 +61,7 @@
                 <div class="flex flex-col items-center text-center space-y-1.5 drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]">
                     <h2 class="text-xl sm:text-2xl font-bold tracking-widest text-white mb-1">HOW TO PLAY</h2>
                     
-                    <ul class="text-[0.65rem] sm:text-xs space-y-1 text-gray-100 max-w-md leading-relaxed">
+                    <ul class="instruction-list text-[0.65rem] sm:text-xs space-y-1 text-gray-100 max-w-md leading-relaxed text-left">
                         <li>- For phone, tap top screen to jump, tap left/right screen to move</li>
                         <li>- dodge obstacles along the path</li>
                         <li>- collect food and accessories to earn points</li>
@@ -105,7 +114,7 @@
             <p id="gameover-score" class="mb-4"></p><div class="flex gap-4">
                 <button onclick="restartGame()" class="bg-white text-black px-6 py-3 hover:bg-gray-200 active:scale-95 shadow-md rounded">REPLAY</button>
                 <button onclick="window.open('https://www.linkedin.com/in/nur-liyana-aris/','_blank')" class="bg-purple-600 text-white px-6 py-3 hover:bg-purple-700 active:scale-95 shadow-md rounded">LINKEDIN</button>
-                <button onclick="window.open('https://www.linkedin.com/in/nur-liyana-aris/','_blank')" class="bg-purple-200 text-white px-6 py-3 hover:bg-purple-300 active:scale-95 shadow-md rounded">Buy Me A Coffee</button>
+                <button onclick="window.open('https://www.linkedin.com/in/nur-liyana-aris/','_blank')" class="bg-purple-500 text-white px-6 py-3 hover:bg-purple-700 active:scale-95 shadow-md rounded">Buy Me A Coffee</button>
             </div>
         </div>
 

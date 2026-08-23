@@ -15,7 +15,7 @@ function showInstructionModal() {
     
     if (modal) {
         if (modalCat) {
-            modalCat.src = 'images/ready.png';
+            modalCat.src = 'images/ready.webp';
         }
         modal.classList.remove('hidden');
     }
@@ -46,6 +46,10 @@ function initAudio() {
         music.muted = isMuted;
         music.play().catch(err => console.log('Autoplay prevented. Waiting for user interaction:', err));
     }
+}
+
+function getPlayerStartX() {
+    return Math.max(16, Math.min(W * 0.025, W - player.w));
 }
 
 // Global user interaction listeners to bypass autoplay restrictions on page load
@@ -247,21 +251,19 @@ const catOrangeImg = new Image();
 catOrangeImg.src = 'images/ready.webp';
 let catImg = catOrangeImg;
 
-const foodImages = [];
+const accessoriesImages = [];
 for (let i = 1; i <= 7; i++) {
     const img = new Image();
-    img.src = `images/food-${i}.png`;
-    foodImages.push(img);
+    img.src = `images/Accessories-${i}.webp`;
+    accessoriesImages.push(img);
 }
 
-const groundImg = new Image();
-groundImg.src = 'images/land.png';
 const backgroundImg = new Image();
 backgroundImg.src = 'images/background.png';
 const secondFloorImg = new Image();
 secondFloorImg.src = 'images/2nd floor.png';
 const accessoryImages = [
-    ...foodImages,
+    ...accessoriesImages,
     'images/2ndimage.JPG',
     'images/2nd floor.png'
 ];
@@ -274,8 +276,8 @@ const obstacleImages = [
 ];
 obstacleImages[0].src = 'images/obstacle1.png';
 obstacleImages[1].src = 'images/obstacle2.png';
-obstacleImages[2].src = 'images/awan1.png';
-obstacleImages[3].src = 'images/awan2.png';
+obstacleImages[2].src = 'images/awan1.webp';
+obstacleImages[3].src = 'images/awan2.webp';
 
 function isVisualObstacle(img) {
     return img === obstacleImages[2] || img === obstacleImages[3];
@@ -283,7 +285,7 @@ function isVisualObstacle(img) {
 
 // --- GAME OBJECTS ---
 const player = {
-    x: 60,
+    x: 20,
     y: GROUND_Y - PLAYER_HEIGHT,
     w: PLAYER_WIDTH,
     h: PLAYER_HEIGHT,
@@ -298,6 +300,13 @@ const player = {
 let foods = [];
 let obstacles = [];
 let floatingTexts = [];
+const secondFloor = {
+    x: 0,
+    y: 0,
+    w: 0,
+    h: 10,
+    previousX: 0
+};
 
 // --- RESIZE LOGIC (Placed after variable declarations) ---
 function resizeCanvas() {
@@ -309,6 +318,12 @@ function resizeCanvas() {
 
     canvas.width = W;
     canvas.height = H;
+
+    secondFloor.y = GROUND_Y - Math.min(132, H * 0.28);
+    secondFloor.w = W * 0.20;
+    if (!secondFloor.x || secondFloor.x > W) {
+        secondFloor.x = W * 0.275;
+    }
 
     // Keep player anchored to ground on resize
     if (player && player.onGround) {
@@ -343,6 +358,13 @@ function update() {
     frameCount++;
     playWalkSFX();
 
+    secondFloor.previousX = secondFloor.x;
+    secondFloor.x -= speed;
+    if (secondFloor.x + secondFloor.w < 0) {
+        secondFloor.x = W + 40;
+    }
+    const secondFloorDelta = secondFloor.x - secondFloor.previousX;
+
     if (keys.left) player.x -= 2.6;
     if (keys.right) player.x += 2.6;
     player.x = Math.max(0, Math.min(W - player.w, player.x));
@@ -368,12 +390,15 @@ function update() {
     player.vy += player.gravity;
     player.y += player.vy;
 
-    const upperFloorY = GROUND_Y - Math.min(132, H * 0.28);
-    if (player.vy >= 0 && previousBottom <= upperFloorY && player.y + player.h >= upperFloorY && player.x > W * 0.22 && player.x < W * 0.82) {
+    const upperFloorY = secondFloor.y;
+    const onSecondFloor = player.x + player.w > secondFloor.x && player.x < secondFloor.x + secondFloor.w;
+    if (player.vy >= 0 && previousBottom <= upperFloorY && player.y + player.h >= upperFloorY && onSecondFloor) {
         player.y = upperFloorY - player.h;
         player.vy = 0;
         player.onGround = true;
         floor = 2;
+        player.x += secondFloorDelta;
+        player.x = Math.max(0, Math.min(W - player.w, player.x));
     }
 
     if (player.y >= GROUND_Y - player.h) {
@@ -399,18 +424,19 @@ function update() {
 
     if (frameCount % 70 === 0) {
         if (Math.random() < 0.6) {
-            const randomFood = foodImages[Math.floor(Math.random() * foodImages.length)];
+            const randomFood = accessoriesImages[Math.floor(Math.random() * accessoriesImages.length)];
             const foodW = 32;
-            const foodH = 32;
+            const foodH = 48;
             const useUpperFloor = Math.random() < Math.min(0.2 + level * 0.08, 0.65);
             const yPos = useUpperFloor ? upperFloorY - foodH - 2 : GROUND_Y - foodH - Math.random() * Math.min(80 + level * 10, 130);
             const proposedFood = {
-                x: W + 20,
+                x: useUpperFloor ? secondFloor.x + Math.random() * Math.max(0, secondFloor.w - foodW) : W + 20,
                 y: yPos,
                 w: foodW,
                 h: foodH,
                 img: randomFood,
-                floor: useUpperFloor ? 2 : 1
+                floor: useUpperFloor ? 2 : 1,
+                onSecondFloor: useUpperFloor
             };
 
             const overlapsObstacle = obstacles.some((obs) => {
@@ -430,13 +456,13 @@ function update() {
 
         if (Math.random() < Math.min(0.4 + level * 0.04, 0.75)) {
             const obstacleImg = obstacleImages[Math.floor(Math.random() * obstacleImages.length)];
-            const obstacleH = isVisualObstacle(obstacleImg) ? 28 : 40;
-            const obstacleY = isVisualObstacle(obstacleImg) ? 60 + Math.random() * 120 : GROUND_Y - obstacleH;
+            const obstacleH = isVisualObstacle(obstacleImg) ? 50 : 70;
+            const obstacleY = isVisualObstacle(obstacleImg) ? 70 + Math.random() * 120 : GROUND_Y - obstacleH;
 
             obstacles.push({
                 x: W + 20,
                 y: obstacleY,
-                w: isVisualObstacle(obstacleImg) ? 48 : 32,
+                w: isVisualObstacle(obstacleImg) ? 70 : 60,
                 h: obstacleH,
                 img: obstacleImg
             });
@@ -448,7 +474,12 @@ function update() {
         if (obstacles[i].x + obstacles[i].w < 0) obstacles.splice(i, 1);
     }
     for (let i = foods.length - 1; i >= 0; i--) {
-        foods[i].x -= speed;
+        if (foods[i].onSecondFloor) {
+            foods[i].x += secondFloorDelta;
+            foods[i].y = secondFloor.y - foods[i].h - 2;
+        } else {
+            foods[i].x -= speed;
+        }
         if (foods[i].x + foods[i].w < 0) foods.splice(i, 1);
     }
 
@@ -505,30 +536,32 @@ function update() {
 function draw() {
     ctx.clearRect(0, 0, W, H);
 
-    if (Math.floor(score / 150) % 2 === 1 && secondFloorImg.complete) {
-        ctx.drawImage(secondFloorImg, 0, 0, W, H);
-    } else if (backgroundImg.complete) {
-        ctx.drawImage(backgroundImg, 0, 0, W, GROUND_Y);
+    if (backgroundImg.complete && backgroundImg.naturalWidth > 0) {
+        const coverScale = Math.max(W / backgroundImg.naturalWidth, H / backgroundImg.naturalHeight);
+        const backgroundWidth = backgroundImg.naturalWidth * coverScale;
+        const backgroundHeight = backgroundImg.naturalHeight * coverScale;
+        ctx.drawImage(
+            backgroundImg,
+            (W - backgroundWidth) / 2,
+            (H - backgroundHeight) / 2,
+            backgroundWidth,
+            backgroundHeight
+        );
     } else {
         ctx.fillStyle = '#87CEEB';
         ctx.fillRect(0, 0, W, H);
     }
 
-    const upperFloorY = GROUND_Y - Math.min(132, H * 0.28);
-    ctx.fillStyle = '#6b4e71';
-    ctx.fillRect(W * 0.22, upperFloorY, W * 0.6, 8);
-
-    if (groundImg.complete) {
-        ctx.drawImage(groundImg, 0, GROUND_Y, W, H - GROUND_Y);
+    if (secondFloorImg.complete && secondFloorImg.naturalWidth > 0) {
+        const platformHeight = secondFloor.w * secondFloorImg.naturalHeight / secondFloorImg.naturalWidth;
+        ctx.drawImage(secondFloorImg, secondFloor.x, secondFloor.y, secondFloor.w, platformHeight);
     } else {
-        ctx.fillStyle = '#654321';
-        ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y);
-        ctx.fillStyle = '#8B5A2B';
-        ctx.fillRect(0, GROUND_Y, W, 5);
+        ctx.fillStyle = '#6b4e71';
+        ctx.fillRect(secondFloor.x, secondFloor.y, secondFloor.w, secondFloor.h);
     }
 
     for (let obs of obstacles) {
-        if (obs.img && obs.img.complete) {
+        if (obs.img && obs.img.complete && obs.img.naturalWidth > 0) {
             ctx.drawImage(obs.img, obs.x, obs.y, obs.w, obs.h);
         } else {
             ctx.fillStyle = '#2d6a2e';
@@ -539,7 +572,7 @@ function draw() {
     }
 
     for (let f of foods) {
-        if (f.img.complete) {
+        if (f.img.complete && f.img.naturalWidth > 0) {
             ctx.drawImage(f.img, f.x, f.y, f.w, f.h);
         } else {
             ctx.fillStyle = 'yellow';
@@ -547,7 +580,7 @@ function draw() {
         }
     }
 
-    if (catImg.complete) {
+    if (catImg.complete && catImg.naturalWidth > 0) {
         ctx.save();
         if (player.frame === 3) {
             ctx.translate(player.x + player.w / 2, player.y + player.h / 2);
@@ -603,8 +636,9 @@ function startGame() {
     isPaused = false;
     scoreDisplay.textContent = '0';
     renderLeaderboard();
+    initAudio();
     gameState = 'playing';
-    player.x = 60;
+    player.x = getPlayerStartX();
     player.y = GROUND_Y - player.h;
     foods = [];
     obstacles = [];
@@ -635,7 +669,7 @@ function restartGame() {
     playerName = 'Player';
     playerCountry = '🇯🇵';
 
-    player.x = 60;
+    player.x = getPlayerStartX();
     player.y = GROUND_Y - player.h;
     player.vy = 0;
     player.onGround = true;
@@ -734,7 +768,53 @@ if (instructionModalEl) {
 // --- FETCH COUNTRIES FROM API ---
 async function fetchCountries() {
     const countrySelect = document.getElementById('player-country');
+    const countryButton = document.getElementById('country-dropdown-button');
+    const countryOptions = document.getElementById('country-dropdown-options');
+    const countrySearch = document.getElementById('country-search');
+    const countryOptionList = document.getElementById('country-option-list');
     if (!countrySelect) return;
+
+    const renderCountryOptions = (searchTerm = '') => {
+        if (!countryButton || !countryOptions || !countryOptionList) return;
+        countryOptionList.innerHTML = '';
+        const normalizedSearch = searchTerm.trim().toLowerCase();
+        Array.from(countrySelect.options).forEach((option) => {
+            if (!option.value) return;
+            if (normalizedSearch && !option.textContent.toLowerCase().includes(normalizedSearch)) return;
+            const countryOption = document.createElement('button');
+            countryOption.type = 'button';
+            countryOption.className = 'country-dropdown-option';
+            countryOption.setAttribute('role', 'option');
+            countryOption.textContent = option.textContent;
+            countryOption.addEventListener('click', () => {
+                countrySelect.value = option.value;
+                countryButton.textContent = option.textContent;
+                countryOptions.classList.add('hidden');
+                countryButton.setAttribute('aria-expanded', 'false');
+            });
+            countryOptionList.appendChild(countryOption);
+        });
+        if (!countryOptionList.children.length) {
+            const noResults = document.createElement('div');
+            noResults.className = 'country-no-results';
+            noResults.textContent = 'No country found';
+            countryOptionList.appendChild(noResults);
+        }
+        countryButton.textContent = countrySelect.options[countrySelect.selectedIndex]?.textContent || 'Select Country...';
+    };
+
+    if (countryButton && countryOptions) {
+        countryButton.addEventListener('click', () => {
+            const isOpen = !countryOptions.classList.contains('hidden');
+            countryOptions.classList.toggle('hidden', isOpen);
+            countryButton.setAttribute('aria-expanded', String(!isOpen));
+            if (!isOpen && countrySearch) countrySearch.focus();
+        });
+    }
+
+    if (countrySearch) {
+        countrySearch.addEventListener('input', () => renderCountryOptions(countrySearch.value));
+    }
 
     const parseAndRender = (data) => {
         // Filter out specific entries if needed
@@ -750,6 +830,7 @@ async function fetchCountries() {
             option.textContent = `${flag} ${name}`;
             countrySelect.appendChild(option);
         });
+        renderCountryOptions();
     };
 
     try {
@@ -789,6 +870,7 @@ async function fetchCountries() {
                 <option value="🇬🇧 United Kingdom">🇬🇧 United Kingdom</option>
                 <option value="🇺🇸 United States">🇺🇸 United States</option>
                 <option value="🇻🇳 Vietnam">🇻🇳 Vietnam</option>            `;
+            renderCountryOptions();
         }
     }
 }
@@ -797,6 +879,5 @@ async function fetchCountries() {
 document.addEventListener('DOMContentLoaded', () => {
     fetchCountries();
     renderLeaderboard();
-    initAudio();
     gameLoop();
 });
