@@ -45,7 +45,7 @@ function initAudio() {
 
     const music = document.getElementById('background-music');
     if (music && music.paused) {
-        music.volume = 0.1;
+        music.volume = 0.01;
         music.muted = isMuted;
         music.play().catch(err => console.log('Autoplay prevented. Waiting for user interaction:', err));
     }
@@ -106,21 +106,38 @@ async function loadLeaderboardFromSupabase() {
         .from('leaderboard')
         .select('name, country, score')
         .order('score', { ascending: false })
-        .limit(50);
+        .limit(100);
 
     if (error) {
         console.warn('Supabase leaderboard unavailable; using local scores.', error.message);
         return;
     }
 
-    leaderboard = data || [];
+    leaderboard = (data || []).map(item => ({
+        name: item.name,
+        country: item.country,
+        score: item.score
+    }));
+
     localStorage.setItem('jackpot-leaderboard', JSON.stringify(leaderboard));
     renderLeaderboard();
 }
 
 async function saveScoreToSupabase(scoreEntry) {
-    const { error } = await supabaseClient.from('leaderboard').insert(scoreEntry);
-    if (error) console.warn('Could not save score to Supabase:', error.message);
+    // Map script variables to your exact database column names
+    const payload = {
+        name: scoreEntry.name,
+        country: scoreEntry.country,
+        score: scoreEntry.score
+    };
+
+    const { error } = await supabaseClient
+        .from('leaderboard')
+        .insert([payload]);
+
+    if (error) {
+        console.warn('Could not save score to Supabase:', error.message);
+    }
 }
 
 function togglePause() {
@@ -442,7 +459,7 @@ function update() {
         playWinSFX();
         floatingTexts.push({ x: W / 2, y: H / 2, text: `LEVEL ${level}`, life: 120, maxLife: 120, levelUp: true });
     }
-    if (score > leaderboard[0].score && !isCheering) {
+    if (leaderboard.length > 0 && score > leaderboard[0].score && !isCheering) {
         isCheering = true;
         player.frame = 3;
         playWinSFX();

@@ -8,6 +8,9 @@ create table if not exists public.leaderboard (
 
 alter table public.leaderboard enable row level security;
 
+drop policy if exists "Anyone can read leaderboard" on public.leaderboard;
+drop policy if exists "Anyone can submit scores" on public.leaderboard;
+
 create policy "Anyone can read leaderboard"
 on public.leaderboard
 for select
