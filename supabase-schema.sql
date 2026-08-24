@@ -11,12 +11,17 @@ alter table public.leaderboard enable row level security;
 drop policy if exists "Anyone can read leaderboard" on public.leaderboard;
 drop policy if exists "Anyone can submit scores" on public.leaderboard;
 
-create policy "Anyone can read leaderboard"
-on public.leaderboard
-for select
-using (true);
+-- Remove existing restrictive insert policy
+DROP POLICY IF EXISTS "Allow public insert" ON leaderboard;
 
-create policy "Anyone can submit scores"
-on public.leaderboard
-for insert
-with check (score > 0 and char_length(name) between 1 and 14);
+-- Create an open INSERT policy for anonymous submissions
+CREATE POLICY "Allow public insert"
+ON leaderboard
+FOR INSERT
+TO anon
+WITH CHECK (
+    score > 0 
+    AND name IS NOT NULL 
+    AND char_length(trim(name)) >= 1 
+    AND char_length(trim(name)) <= 14
+);

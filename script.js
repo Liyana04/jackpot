@@ -124,19 +124,32 @@ async function loadLeaderboardFromSupabase() {
 }
 
 async function saveScoreToSupabase(scoreEntry) {
-    // Map script variables to your exact database column names
+    // 1. Sanitize name (trim spaces and force maximum 14 characters)
+    let sanitizedName = (scoreEntry.name || 'Player').trim();
+    if (sanitizedName.length === 0) sanitizedName = 'Player';
+    sanitizedName = sanitizedName.substring(0, 14);
+
+    // 2. Validate score before attempting network request
+    if (scoreEntry.score <= 0) {
+        console.warn('Score submission skipped: score must be greater than 0.');
+        return;
+    }
+
     const payload = {
-        name: scoreEntry.name,
-        country: scoreEntry.country,
+        name: sanitizedName,
+        country: scoreEntry.country || 'Unknown',
         score: scoreEntry.score
     };
 
-    const { error } = await supabaseClient
+    // 3. Send insert payload
+    const { data, error } = await supabaseClient
         .from('leaderboard')
         .insert([payload]);
 
     if (error) {
-        console.warn('Could not save score to Supabase:', error.message);
+        console.error('Could not save score to Supabase:', error.message);
+    } else {
+        console.log('Score saved successfully!');
     }
 }
 
