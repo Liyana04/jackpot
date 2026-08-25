@@ -17,11 +17,11 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_
 // Show Instructions in Pause Mode
 function showInstructionModal() {
     const modal = document.getElementById('instruction-modal');
-    const modalCat = document.getElementById('modal-cat-preview');
+    const modalJackpot = document.getElementById('modal-jackpot-preview');
     
     if (modal) {
-        if (modalCat) {
-            modalCat.src = 'images/ready.webp';
+        if (modalJackpot) {
+            modalJackpot.src = 'images/ready.webp';
         }
         modal.classList.remove('hidden');
     }
@@ -190,9 +190,9 @@ function togglePause() {
     }
 
     if (isPaused) {
-        catImg = catPauseImg;
+        jackImg = jackPauseImg;
     } else {
-        updateCatImage(); // restore based on current movement
+        updateJackImage(); // restore based on current movement
     }
 
     const music = document.getElementById('background-music');
@@ -340,15 +340,15 @@ let deathTimer = 0;
 // --- ASSETS ---
 const jackpotImg = new Image();
 jackpotImg.src = 'images/ready.webp';
-const catJumpImg = new Image();
-catJumpImg.src = 'images/jump.webp';
-const catLeftImg = new Image();
-catLeftImg.src = 'images/left.webp';
-const catRightImg = new Image();
-catRightImg.src = 'images/right.webp';
-const catPauseImg = new Image();
-catPauseImg.src = 'images/pause.webp';
-let catImg = jackpotImg;
+const jackJumpImg = new Image();
+jackJumpImg.src = 'images/jump.webp';
+const jackLeftImg = new Image();
+jackLeftImg.src = 'images/left.webp';
+const jackRightImg = new Image();
+jackRightImg.src = 'images/right.webp';
+const jackPauseImg = new Image();
+jackPauseImg.src = 'images/pause.webp';
+let jackImg = jackpotImg;
 
 const accessoriesImages = [];
 for (let i = 1; i <= 7; i++) {
@@ -398,26 +398,26 @@ function isVisualObstacle(img) {
     return img === obstacleImages[2] || img === obstacleImages[3];
 }
 
-function updateCatImage() {
+function updateJackImage() {
     // If game is paused, show pause image
     if (gameState === 'paused') {
-        catImg = catPauseImg;
+        jackImg = jackPauseImg;
         return;
     }
 
     // If player is in the air, show jump image
     if (!player.onGround) {
-        catImg = catJumpImg;
+        jackImg = jackJumpImg;
         return;
     }
 
     // On ground: choose direction or idle
     if (keys.left) {
-        catImg = catLeftImg;
+        jackImg = jackLeftImg;
     } else if (keys.right) {
-        catImg = catRightImg;
+        jackImg = jackRightImg;
     } else {
-        catImg = jackpotImg;
+        jackImg = jackpotImg;
     }
 }
 
@@ -542,7 +542,7 @@ function update() {
     if (keys.jump && player.onGround) {
         player.vy = player.jumpPower;
         player.onGround = false;
-        catImg = catJumpImg; 
+        jackImg = jackJumpImg; 
         playJumpSFX();
     }
 
@@ -559,7 +559,7 @@ function update() {
         floor = 2;
         player.x += secondFloorDelta;
         player.x = Math.max(BOUND_LEFT, Math.min(BOUND_RIGHT, player.x));
-        if (catImg === catJumpImg) catImg = jackpotImg;
+        if (jackImg === jackJumpImg) jackImg = jackpotImg;
     }
 
     if (player.y >= GROUND_Y - player.h) {
@@ -567,7 +567,7 @@ function update() {
         player.vy = 0;
         player.onGround = true;
         floor = 1;
-        // if (catImg === catJumpImg) catImg = jackpotImg;
+        // if (jackImg === jackJumpImg) jackImg = jackpotImg;
     }
 
     const newLevel = Math.floor(score / 100) + 1;
@@ -695,7 +695,7 @@ function update() {
         ft.life -= 1;
         if (ft.life <= 0) floatingTexts.splice(i, 1);
     }
-    updateCatImage();
+    updateJackImage();
 }
 
 function draw() {
@@ -765,20 +765,20 @@ function draw() {
         }
     }
 
-    if (catImg.complete && catImg.naturalWidth > 0) {
+    if (jackImg.complete && jackImg.naturalWidth > 0) {
         ctx.save();
         if (player.frame === 3) {
             ctx.translate(player.x + player.w / 2, player.y + player.h / 2);
             ctx.rotate(Math.sin(frameCount / 3) * 0.15);
             ctx.scale(1.15, 1.15);
-            ctx.drawImage(catImg, -player.w / 2, -player.h / 2, player.w, player.h);
+            ctx.drawImage(jackImg, -player.w / 2, -player.h / 2, player.w, player.h);
         } else if (player.frame === 4) {
             ctx.translate(player.x + player.w / 2, player.y + player.h / 2);
             ctx.rotate(Math.min(1.4, Math.abs(player.vy) * 0.08));
             ctx.globalAlpha = Math.max(0.2, deathTimer / 36);
-            ctx.drawImage(catImg, -player.w / 2, -player.h / 2, player.w, player.h);
+            ctx.drawImage(jackImg, -player.w / 2, -player.h / 2, player.w, player.h);
         } else {
-            ctx.drawImage(catImg, player.x, player.y, player.w, player.h);
+            ctx.drawImage(jackImg, player.x, player.y, player.w, player.h);
         }
         ctx.restore();
     } else {
@@ -849,7 +849,7 @@ function startGame() {
 }
 
 function restartGame() {
-    catImg = jackpotImg;
+    jackImg = jackpotImg;
     gameoverScreen.classList.add('hidden');
     winScreen.classList.add('hidden');
     hudEl.classList.add('hidden');
