@@ -140,6 +140,7 @@ html, body {
 }
 
 #hud {
+    border: 2px solid red !important;
     pointer-events: none;
     top: 0.5rem;
     right: 0.5rem;
@@ -170,8 +171,8 @@ html, body {
 
     #game-wrapper {
         border-width: 4px;
-        aspect-ratio: 4 / 7;
-        max-height: calc(100dvh - 1.2rem);
+        /* aspect-ratio: 4 / 7;
+        max-height: calc(100dvh - 1.2rem); */
     }
 
     #hud {
