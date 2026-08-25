@@ -188,6 +188,13 @@ function togglePause() {
     if (pauseIcon) {
         pauseIcon.src = isPaused ? 'images/play.PNG' : 'images/pause.PNG';
     }
+
+    if (isPaused) {
+        catImg = catPauseImg;
+    } else {
+        updateCatImage(); // restore based on current movement
+    }
+
     const music = document.getElementById('background-music');
     if (music) {
         if (isPaused) {
@@ -331,9 +338,17 @@ let isCheering = false;
 let deathTimer = 0;
 
 // --- ASSETS ---
-const catOrangeImg = new Image();
-catOrangeImg.src = 'images/ready.webp';
-let catImg = catOrangeImg;
+const jackpotImg = new Image();
+jackpotImg.src = 'images/ready.webp';
+const catJumpImg = new Image();
+catJumpImg.src = 'images/jump.webp';
+const catLeftImg = new Image();
+catLeftImg.src = 'images/left.webp';
+const catRightImg = new Image();
+catRightImg.src = 'images/right.webp';
+const catPauseImg = new Image();
+catPauseImg.src = 'images/pause.webp';
+let catImg = jackpotImg;
 
 const accessoriesImages = [];
 for (let i = 1; i <= 7; i++) {
@@ -381,6 +396,29 @@ obstacleImages[3].src = 'images/awan2.webp';
 
 function isVisualObstacle(img) {
     return img === obstacleImages[2] || img === obstacleImages[3];
+}
+
+function updateCatImage() {
+    // If game is paused, show pause image
+    if (gameState === 'paused') {
+        catImg = catPauseImg;
+        return;
+    }
+
+    // If player is in the air, show jump image
+    if (!player.onGround) {
+        catImg = catJumpImg;
+        return;
+    }
+
+    // On ground: choose direction or idle
+    if (keys.left) {
+        catImg = catLeftImg;
+    } else if (keys.right) {
+        catImg = catRightImg;
+    } else {
+        catImg = jackpotImg;
+    }
 }
 
 // --- GAME OBJECTS ---
@@ -504,6 +542,7 @@ function update() {
     if (keys.jump && player.onGround) {
         player.vy = player.jumpPower;
         player.onGround = false;
+        catImg = catJumpImg; 
         playJumpSFX();
     }
 
@@ -520,6 +559,7 @@ function update() {
         floor = 2;
         player.x += secondFloorDelta;
         player.x = Math.max(BOUND_LEFT, Math.min(BOUND_RIGHT, player.x));
+        if (catImg === catJumpImg) catImg = jackpotImg;
     }
 
     if (player.y >= GROUND_Y - player.h) {
@@ -527,6 +567,7 @@ function update() {
         player.vy = 0;
         player.onGround = true;
         floor = 1;
+        // if (catImg === catJumpImg) catImg = jackpotImg;
     }
 
     const newLevel = Math.floor(score / 100) + 1;
@@ -654,6 +695,7 @@ function update() {
         ft.life -= 1;
         if (ft.life <= 0) floatingTexts.splice(i, 1);
     }
+    updateCatImage();
 }
 
 function draw() {
@@ -807,6 +849,7 @@ function startGame() {
 }
 
 function restartGame() {
+    catImg = jackpotImg;
     gameoverScreen.classList.add('hidden');
     winScreen.classList.add('hidden');
     hudEl.classList.add('hidden');
@@ -814,7 +857,6 @@ function restartGame() {
     gameState = 'menu';
     score = 0;
     scoreDisplay.textContent = '0';
-    // nameInput.value = '';
     nameDisplay.textContent = '';
 
     playerName = 'Player';
