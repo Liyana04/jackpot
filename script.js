@@ -65,6 +65,29 @@ window.addEventListener('click', initAudio, { once: true });
 window.addEventListener('keydown', initAudio, { once: true });
 window.addEventListener('touchstart', initAudio, { once: true });
 
+// --- PAGE VISIBILITY HANDLER (auto-mute when tab is hidden) ---
+document.addEventListener('visibilitychange', () => {
+    const music = document.getElementById('background-music');
+    const isGameActive = (gameState === 'playing' || gameState === 'instructions');
+    const isGamePaused = isPaused;
+
+    if (document.hidden) {
+        if (music && !music.paused) {
+            music.pause();
+        }
+        if (audioCtx && audioCtx.state === 'running') {
+            audioCtx.suspend();
+        }
+    } else {
+        if (audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        if (music && !isMuted && !isGamePaused && music.paused && isGameActive) {
+            music.play().catch(err => console.log('Audio resume blocked:', err));
+        }
+    }
+});
+
 // Toggle Mute Function
 function toggleMute() {
     isMuted = !isMuted;
