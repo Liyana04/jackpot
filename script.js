@@ -8,6 +8,7 @@ let leaderboard = JSON.parse(localStorage.getItem('jackpot-leaderboard') || 'nul
 ];
 let BOUND_LEFT = 0;
 let BOUND_RIGHT = 0;
+let sfxVolume = 0.5; // master SFX multiplier
 const PLAYER_BOUNDARY_MARGIN = 0.08; // 8% margin from each side – adjust to match your "red area"
 const SUPABASE_URL = 'https://xvujayoqsumbxlkdgsqo.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_UPWp7LPNk3FqVYNlWR9T1Q_mre_Dq8A';
@@ -216,7 +217,7 @@ function playFoodSFX() {
     osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
     osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.1); // A5
 
-    gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.12 * sfxVolume, audioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
 
     osc.connect(gain);
@@ -232,7 +233,7 @@ function playWalkSFX() {
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     osc.frequency.value = 120;
-    gain.gain.setValueAtTime(0.025, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.12 * sfxVolume, audioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.06);
     osc.connect(gain).connect(audioCtx.destination);
     osc.start();
@@ -250,7 +251,7 @@ function playJumpSFX() {
     osc.frequency.setValueAtTime(150, audioCtx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.15);
     
-    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.25 * sfxVolume, audioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
     
     osc.connect(gain);
@@ -271,7 +272,7 @@ function playGameOverSFX() {
     osc.frequency.setValueAtTime(300, audioCtx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.5);
     
-    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.12 * sfxVolume, audioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
     
     osc.connect(gain);
@@ -294,7 +295,7 @@ function playWinSFX() {
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(freq, startTime);
         
-        gain.gain.setValueAtTime(0.15, startTime);
+        gain.gain.setValueAtTime(0.35, startTime);
         gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.12);
         
         osc.connect(gain);
@@ -319,7 +320,6 @@ const PLAYER_HEIGHT = 64;
 // --- DOM ELEMENTS ---
 const menuScreen = document.getElementById('menu-screen');
 const gameoverScreen = document.getElementById('gameover-screen');
-const winScreen = document.getElementById('win-screen');
 const hudEl = document.getElementById('hud');
 const scoreDisplay = document.getElementById('score-display');
 const nameDisplay = document.getElementById('player-name-display');
@@ -672,14 +672,14 @@ function update() {
     for (let i = foods.length - 1; i >= 0; i--) {
         const f = foods[i];
         if (rectCollide(player, f)) {
-            score += f.floor === 2 ? 10 + level * 2 : 3;
+            score += f.floor === 2 ? 10 + level * 2 : 5;
             scoreDisplay.textContent = score;
             playFoodSFX();
 
             floatingTexts.push({
                 x: f.x,
                 y: f.y - 10,
-                text: `+${f.floor === 2 ? 10 + level * 2 : 3}`,
+                text: `+${f.floor === 2 ? 10 + level * 2 : 5}`,
                 life: 45,
                 maxLife: 45
             });
@@ -839,7 +839,7 @@ function startGame() {
     document.getElementById('pause-btn').classList.remove('hidden');
     const music = document.getElementById('background-music');
         if (music) {
-            music.volume = 0.3; // 30% volume
+            music.volume = 0.01; // 10% volume
             music.muted = isMuted;
             music.play().catch(err => console.log('Audio playback blocked:', err));
         }
@@ -851,7 +851,6 @@ function startGame() {
 function restartGame() {
     jackImg = jackpotImg;
     gameoverScreen.classList.add('hidden');
-    winScreen.classList.add('hidden');
     hudEl.classList.add('hidden');
     menuScreen.classList.remove('hidden');
     gameState = 'menu';
