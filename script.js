@@ -6,6 +6,9 @@ let isPaused = false;
 let leaderboard = JSON.parse(localStorage.getItem('jackpot-leaderboard') || 'null') || [
     { name: 'Liyana', country: 'MY', score: 4 }
 ];
+let BOUND_LEFT = 0;
+let BOUND_RIGHT = 0;
+const PLAYER_BOUNDARY_MARGIN = 0.08; // 8% margin from each side – adjust to match your "red area"
 const SUPABASE_URL = 'https://xvujayoqsumbxlkdgsqo.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_UPWp7LPNk3FqVYNlWR9T1Q_mre_Dq8A';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
@@ -52,7 +55,8 @@ function initAudio() {
 }
 
 function getPlayerStartX() {
-    return Math.max(16, Math.min(W * 0.025, W - player.w));
+    // return Math.max(16, Math.min(W * 0.025, W - player.w));
+    return BOUND_LEFT + 20;
 }
 
 // Global user interaction listeners to bypass autoplay restrictions on page load
@@ -409,6 +413,19 @@ function resizeCanvas() {
     W = window.innerWidth;
     H = window.innerHeight;
 
+    // Calculate left/right boundaries
+    BOUND_LEFT = W * PLAYER_BOUNDARY_MARGIN;
+    BOUND_RIGHT = W - player.w - W * PLAYER_BOUNDARY_MARGIN;
+
+    // Safety fallback if margin is too large
+    if (BOUND_LEFT >= BOUND_RIGHT) {
+        BOUND_LEFT = 20;
+        BOUND_RIGHT = W - player.w - 20;
+    }
+
+    // Clamp player within new bounds after resize
+    player.x = Math.max(BOUND_LEFT, Math.min(BOUND_RIGHT, player.x));
+
     const isMobile = window.innerWidth <= 640;
     GROUND_Y = isMobile ? H - 80 : H - 100;
 
@@ -471,7 +488,7 @@ function update() {
 
     if (keys.left) player.x -= 2.6;
     if (keys.right) player.x += 2.6;
-    player.x = Math.max(0, Math.min(W - player.w, player.x));
+    player.x = Math.max(BOUND_LEFT, Math.min(BOUND_RIGHT, player.x));
 
     if (keys.left || keys.right) {
         player.frameTimer++;
@@ -502,7 +519,7 @@ function update() {
         player.onGround = true;
         floor = 2;
         player.x += secondFloorDelta;
-        player.x = Math.max(0, Math.min(W - player.w, player.x));
+        player.x = Math.max(BOUND_LEFT, Math.min(BOUND_RIGHT, player.x));
     }
 
     if (player.y >= GROUND_Y - player.h) {
