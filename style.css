@@ -91,7 +91,7 @@ html, body {
 /* Remove maximum width constraints so it can stretch fully */
 #game-wrapper {
     width: 100vw;
-    height: 100vh;
+    height: 100dvh;
     max-width: none;
     max-height: none;
     aspect-ratio: auto; /* Remove fixed aspect ratio */
@@ -147,6 +147,11 @@ html, body {
     padding: clamp(0.35rem, 1.2vw, 0.6rem) clamp(0.6rem, 1.8vw, 0.8rem);
 }
 
+.absolute.top-3.right-3 {
+    top: max(0.75rem, env(safe-area-inset-top));
+    right: max(0.75rem, env(safe-area-inset-right));
+}
+
 #menu-screen input,
 #menu-screen button,
 #gameover-screen button,
@@ -170,8 +175,8 @@ html, body {
     }
 
     #hud {
-        top: 0.35rem;
-        right: 0.35rem;
+        top: max(0.5rem, env(safe-area-inset-top));
+        right: max(0.5rem, env(safe-area-inset-right));
     }
 }
 

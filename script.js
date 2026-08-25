@@ -63,9 +63,9 @@ window.addEventListener('touchstart', initAudio, { once: true });
 // Toggle Mute Function
 function toggleMute() {
     isMuted = !isMuted;
-    const muteBtn = document.getElementById('mute-btn');
-    if (muteBtn) {
-        muteBtn.textContent = isMuted ? '🔇' : '🔊';
+    const muteIcon = document.getElementById('mute-icon');
+    if (muteIcon) {
+        muteIcon.src = isMuted ? 'images/mute.svg' : 'images/unmute.svg';
     }
     const music = document.getElementById('background-music');
     if (music) {
@@ -94,11 +94,23 @@ function renderLeaderboard() {
 
 function saveScore() {
     if (!playerName || score <= 0) return;
-    const scoreEntry = { name: playerName, country: playerCountry, score };
-    leaderboard.push(scoreEntry);
+
+    // Check existing local entry
+    const existingIndex = leaderboard.findIndex(item => item.name === playerName);
+
+    if (existingIndex !== -1) {
+        // Only update local array if score is higher
+        if (score > leaderboard[existingIndex].score) {
+            leaderboard[existingIndex].score = score;
+            leaderboard[existingIndex].country = playerCountry;
+        }
+    } else {
+        leaderboard.push({ name: playerName, country: playerCountry, score });
+    }
+
     localStorage.setItem('jackpot-leaderboard', JSON.stringify(leaderboard));
     renderLeaderboard();
-    saveScoreToSupabase(scoreEntry);
+    saveScoreToSupabase({ name: playerName, country: playerCountry, score });
 }
 
 async function loadLeaderboardFromSupabase() {
@@ -124,32 +136,43 @@ async function loadLeaderboardFromSupabase() {
 }
 
 async function saveScoreToSupabase(scoreEntry) {
-    // 1. Sanitize name (trim spaces and force maximum 14 characters)
-    let sanitizedName = (scoreEntry.name || 'Player').trim();
-    if (sanitizedName.length === 0) sanitizedName = 'Player';
-    sanitizedName = sanitizedName.substring(0, 14);
+    const sanitizedName = (scoreEntry.name || 'Player').trim().slice(0, 14) || 'Player';
+    if (scoreEntry.score <= 0) return;
 
-    // 2. Validate score before attempting network request
-    if (scoreEntry.score <= 0) {
-        console.warn('Score submission skipped: score must be greater than 0.');
+    // 1. Fetch current global high score
+    const { data, error } = await supabaseClient
+        .from('leaderboard')
+        .select('score')
+        .eq('id', 1)
+        .maybeSingle();
+
+    if (error) {
+        console.warn('Could not fetch global score:', error.message);
         return;
     }
 
-    const payload = {
-        name: sanitizedName,
-        country: scoreEntry.country || 'Unknown',
-        score: scoreEntry.score
-    };
+    const currentBest = data?.score || 0;
+    if (scoreEntry.score <= currentBest) {
+        console.log('Not a new global high score.');
+        return;
+    }
 
-    // 3. Send insert payload
-    const { data, error } = await supabaseClient
+    // 2. Update the single row
+    const { error: updateError } = await supabaseClient
         .from('leaderboard')
-        .insert([payload]);
+        .update({
+            name: sanitizedName,
+            country: scoreEntry.country || 'Unknown',
+            score: scoreEntry.score,
+            updated_at: new Date().toISOString()
+        })
+        .eq('id', 1);
 
-    if (error) {
-        console.error('Could not save score to Supabase:', error.message);
+    if (updateError) {
+        console.error('Failed to update global high score:', updateError.message);
     } else {
-        console.log('Score saved successfully!');
+        console.log('New global high score!');
+        loadLeaderboardFromSupabase(); // refresh local display
     }
 }
 
@@ -157,9 +180,9 @@ function togglePause() {
     if (gameState !== 'playing' && gameState !== 'paused') return;
     isPaused = !isPaused;
     gameState = isPaused ? 'paused' : 'playing';
-    const pauseButton = document.getElementById('pause-btn');
-    if (pauseButton) {
-        pauseButton.textContent = isPaused ? '▶' : 'Ⅱ';
+    const pauseIcon = document.getElementById('pause-icon');
+    if (pauseIcon) {
+        pauseIcon.src = isPaused ? 'images/play.PNG' : 'images/pause.PNG';
     }
     const music = document.getElementById('background-music');
     if (music) {
@@ -315,8 +338,24 @@ for (let i = 1; i <= 7; i++) {
     accessoriesImages.push(img);
 }
 
-const backgroundImg = new Image();
-backgroundImg.src = 'images/background.png';
+//using images for background
+// const backgroundImg = new Image();
+// backgroundImg.src = 'images/background.webm';
+
+// to hold background frames
+const bgFrames = [];
+const FRAME_COUNT = 5;
+let currentBgFrame = 0;
+let bgFrameTimer = 0;
+const BG_FRAME_INTERVAL = 6; // frames per image – adjust for speed
+
+// Load all five scene images
+for (let i = 1; i <= 5; i++) {
+    const img = new Image();
+    img.src = `images/scene${i}.PNG`; // adjust extension if needed
+    bgFrames.push(img);
+}
+
 const secondFloorImg = new Image();
 secondFloorImg.src = 'images/2nd floor.png';
 const accessoryImages = [
@@ -413,6 +452,14 @@ function update() {
     }
     if (gameState !== 'playing') return;
     frameCount++;
+
+    // Update background frame every BG_FRAME_INTERVAL frames
+    bgFrameTimer++;
+    if (bgFrameTimer >= BG_FRAME_INTERVAL) {
+        bgFrameTimer = 0;
+        currentBgFrame = (currentBgFrame + 1) % FRAME_COUNT;
+    }
+
     playWalkSFX();
 
     secondFloor.previousX = secondFloor.x;
@@ -513,13 +560,15 @@ function update() {
 
         if (Math.random() < Math.min(0.4 + level * 0.04, 0.75)) {
             const obstacleImg = obstacleImages[Math.floor(Math.random() * obstacleImages.length)];
-            const obstacleH = isVisualObstacle(obstacleImg) ? 50 : 70;
+            //awan size
+            const obstacleH = isVisualObstacle(obstacleImg) ? 100 : 70;
             const obstacleY = isVisualObstacle(obstacleImg) ? 70 + Math.random() * 120 : GROUND_Y - obstacleH;
 
             obstacles.push({
                 x: W + 20,
                 y: obstacleY,
-                w: isVisualObstacle(obstacleImg) ? 70 : 60,
+                //awan size
+                w: isVisualObstacle(obstacleImg) ? 140 : 60,
                 h: obstacleH,
                 img: obstacleImg
             });
@@ -593,18 +642,38 @@ function update() {
 function draw() {
     ctx.clearRect(0, 0, W, H);
 
-    if (backgroundImg.complete && backgroundImg.naturalWidth > 0) {
-        const coverScale = Math.max(W / backgroundImg.naturalWidth, H / backgroundImg.naturalHeight);
-        const backgroundWidth = backgroundImg.naturalWidth * coverScale;
-        const backgroundHeight = backgroundImg.naturalHeight * coverScale;
+    // image background
+    // if (backgroundImg.complete && backgroundImg.naturalWidth > 0) {
+    //     const coverScale = Math.max(W / backgroundImg.naturalWidth, H / backgroundImg.naturalHeight);
+    //     const backgroundWidth = backgroundImg.naturalWidth * coverScale;
+    //     const backgroundHeight = backgroundImg.naturalHeight * coverScale;
+    //     ctx.drawImage(
+    //         backgroundImg,
+    //         (W - backgroundWidth) / 2,
+    //         (H - backgroundHeight) / 2,
+    //         backgroundWidth,
+    //         backgroundHeight
+    //     );
+    // } else {
+    //     ctx.fillStyle = '#87CEEB';
+    //     ctx.fillRect(0, 0, W, H);
+    // }
+
+    // Draw video background (if ready)
+    const currentFrame = bgFrames[currentBgFrame];
+    if (currentFrame && currentFrame.complete && currentFrame.naturalWidth > 0) {
+        const coverScale = Math.max(W / currentFrame.naturalWidth, H / currentFrame.naturalHeight);
+        const frameWidth = currentFrame.naturalWidth * coverScale;
+        const frameHeight = currentFrame.naturalHeight * coverScale;
         ctx.drawImage(
-            backgroundImg,
-            (W - backgroundWidth) / 2,
-            (H - backgroundHeight) / 2,
-            backgroundWidth,
-            backgroundHeight
+            currentFrame,
+            (W - frameWidth) / 2,
+            (H - frameHeight) / 2,
+            frameWidth,
+            frameHeight
         );
-    } else {
+    }else {
+        // Fallback solid color
         ctx.fillStyle = '#87CEEB';
         ctx.fillRect(0, 0, W, H);
     }
@@ -685,6 +754,14 @@ function startGame() {
 
     menuScreen.classList.add('hidden');
     hudEl.classList.remove('hidden');
+
+    // Set initial mute icon (unmuted)
+    const muteIcon = document.getElementById('mute-icon');
+    if (muteIcon) muteIcon.src = 'images/unmute.svg';
+    // Pause icon initially shows pause (since game is not paused)
+    const pauseIcon = document.getElementById('pause-icon');
+    if (pauseIcon) pauseIcon.src = 'images/pause.PNG';
+
     score = 0;
     level = 1;
     floor = 1;

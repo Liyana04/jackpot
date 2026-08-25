@@ -62,29 +62,40 @@
                 <div class="flex flex-col items-center text-center space-y-1.5 drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]">
                     <h2 class="text-xl sm:text-2xl font-bold tracking-widest text-white mb-1">HOW TO PLAY</h2>
                     
-                    <ul class="instruction-list text-[0.65rem] sm:text-xs space-y-1 text-gray-100 max-w-md leading-relaxed text-left">
-                        <li>- For phone, tap top screen to jump, tap left/right screen to move</li>
-                        <li>- dodge obstacles along the path</li>
-                        <li>- collect food and accessories to earn points</li>
-                        <li>- every 100 points raises the difficulty</li>
-                        <li>- jump onto the second floor for rare rewards, then return to the ground</li>
+                    <ul class="instruction-list text-[0.65rem] sm:text-xs space-y-3 text-gray-100 max-w-md leading-relaxed text-left">
+                        <li>🚀 For phone, tap top screen to jump, tap left/right screen to move</li>
+                        <li>🚀 dodge obstacles along the path</li>
+                        <li>🚀 collect food and accessories to earn points</li>
+                        <li>🚀 every 100 points raises the difficulty</li>
+                        <li>🚀 jump onto the second floor for rare rewards, then return to the ground</li>
                     </ul>
                 </div>
 
                 <!-- Center Player Sprite Preview -->
                 <div class="flex flex-col items-center my-2">
-                    <img id="modal-cat-preview" src="images/ready.webp" class="w-10 h-10 object-contain drop-shadow-md animate-bounce mb-1">
+                    <img id="modal-cat-preview" src="images/ready.webp" class="w-20 h-20 object-contain drop-shadow-md animate-bounce mb-1">
                     <div class="w-16 h-1 bg-pink-500 rounded-full shadow-lg"></div>
                 </div>
 
                 <!-- Bottom Controls & Press Any Key Prompt -->
                 <div class="flex flex-col items-center text-center space-y-2 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
                     <!-- Key Pills -->
-                    <div class="flex items-center gap-2 text-black text-[0.65rem] font-bold">
-                        <span class="bg-white px-2.5 py-0.5 rounded border border-black shadow">spacebar</span>
-                        <span class="bg-white px-1.5 py-0.5 rounded border border-black shadow">⬅️</span>
-                        <span class="bg-white px-1.5 py-0.5 rounded border border-black shadow">➡️</span>
-                    </div>
+                    <div class="flex items-center gap-3 text-black font-bold">
+                    <!-- Spacebar – larger -->
+                    <span class="bg-white px-6 py-3 rounded border border-black shadow text-sm">
+                        spacebar
+                    </span>
+                    
+                    <!-- Left arrow – larger -->
+                    <span class="bg-white px-3 py-2 rounded border border-black shadow text-base">
+                        ⬅️
+                    </span>
+                    
+                    <!-- Right arrow – larger -->
+                    <span class="bg-white px-3 py-2 rounded border border-black shadow text-base">
+                        ➡️
+                    </span>
+</div>
                     
                     <!-- Press Any Key Text -->
                     <p class="text-[0.65rem] sm:text-xs text-gray-200 animate-pulse tracking-wide">
@@ -104,8 +115,12 @@
             </div>
 
             <div class="flex items-center gap-2">
-             <button id="mute-btn" onclick="toggleMute()" class="pointer-events-auto bg-black/50 hover:bg-black/70 text-base p-1.5 rounded transition">🔊</button>
-             <button id="pause-btn" onclick="togglePause()" class="pointer-events-auto bg-black/50 hover:bg-black/70 text-base p-1.5 rounded transition hidden">Ⅱ</button>
+             <button id="mute-btn" onclick="toggleMute()" class="pointer-events-auto bg-white/50 hover:bg-white/70 p-1.5 rounded transition">
+                <img id="mute-icon" src="images/unmute.svg" alt="Toggle mute" class="w-5 h-5 sm:w-6 sm:h-6">
+            </button>
+             <button id="pause-btn" onclick="togglePause()" class="pointer-events-auto bg-white/50 hover:bg-white/70 p-1.5 rounded transition hidden">
+                <img id="pause-icon" src="images/pause.PNG" alt="Toggle pause" class="w-5 h-5 sm:w-6 sm:h-6">
+            </button>
             </div>
         </div>
 
